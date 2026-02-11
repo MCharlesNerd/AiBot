@@ -15,6 +15,10 @@ import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.BuildCreativeModeTabContentsEvent;
 import net.neoforged.neoforge.event.server.ServerStartingEvent;
 
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
+
 // The value here should match an entry in the META-INF/neoforge.mods.toml file
 @Mod(AIBOT.MODID)
 public class AIBOT {
@@ -25,13 +29,30 @@ public class AIBOT {
 
     private static Minecraft minecraft;
     private ConversationDatabase conversationDatabase;
+    private AIBOT db;
 
     public AIBOT(){
         conversationDatabase = new ConversationDatabase();
     }
 
-    private void init(FMLCommonSetupEvent event) {
-        conversationDatabase.loadConversations();
+    private void init(FMLCommonSetupEvent event) throws SQLException {
+        conversationDatabase = new ConversationDatabaseImpl();
+        conversationDatabase.init();
+        db = new AIBOT();
+        db.connect();
+    }
+
+    public String getConversation(String id) throws SQLException {
+        return db.getConversation(id);
+    }
+
+    public void saveConversation(String id, String message) throws SQLException {
+        db.saveConversation(id, message);
+    }
+
+    public void connect() throws SQLException {
+        String url = "jdbc:sqlite:conversations.db";
+        Connection connection = DriverManager.getConnection(url);
     }
 
     public void onTick(){
